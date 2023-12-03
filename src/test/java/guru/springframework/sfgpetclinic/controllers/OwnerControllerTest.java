@@ -17,6 +17,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
+import static org.mockito.Mockito.*;
 
 /**
  * Created by Rami SAHRAOUI on 03/12/2023
@@ -69,8 +70,12 @@ class OwnerControllerTest {
         String viewName = controller.processFindForm(owner, result, null);
 
         // then
+        then(service).should().findAllByLastNameLike(anyString());
+        verifyNoMoreInteractions(service);
+
         assertThat(stringArgumentCaptor.getValue()).isEqualToIgnoringCase("%Buck%");
         assertThat(viewName).isEqualToIgnoringCase("redirect:/owners/1");
+        verifyZeroInteractions(model);
     }
     @Test
     void processFindFormWildcardNoOwner() {
@@ -81,8 +86,12 @@ class OwnerControllerTest {
         String viewName = controller.processFindForm(owner, result, null);
 
         // then
+        then(service).should().findAllByLastNameLike(anyString());
+        verifyNoMoreInteractions(service);
+
         assertThat(stringArgumentCaptor.getValue()).isEqualToIgnoringCase("%DontFindMe%");
         assertThat(viewName).isEqualToIgnoringCase("owners/findOwners");
+        verifyZeroInteractions(model);
     }
     @Test
     void processFindFormWildcardOwnerList() {
@@ -98,7 +107,10 @@ class OwnerControllerTest {
         assertThat(viewName).isEqualToIgnoringCase("owners/ownersList");
             // inorder asserts
         inOrder.verify(service).findAllByLastNameLike(anyString());
-        inOrder.verify(model).addAttribute(anyString(), anyList());
+        inOrder.verify(model, times(1)).addAttribute(anyString(), anyList());
+
+        verifyNoMoreInteractions(service);
+        verifyNoMoreInteractions(model);
     }
 
     @Test
