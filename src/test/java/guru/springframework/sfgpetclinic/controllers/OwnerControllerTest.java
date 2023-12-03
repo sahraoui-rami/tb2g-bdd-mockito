@@ -14,7 +14,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
 
@@ -33,6 +33,9 @@ class OwnerControllerTest {
 
     @Mock
     BindingResult result;
+
+    @Mock
+    Model model;
 
     @Captor
     ArgumentCaptor<String> stringArgumentCaptor;
@@ -85,13 +88,17 @@ class OwnerControllerTest {
     void processFindFormWildcardOwnerList() {
         // given
         Owner owner = new Owner(1L, "Joe", "FindMe");
+        InOrder inOrder = Mockito.inOrder(model, service);
 
         // when
-        String viewName = controller.processFindForm(owner, result, Mockito.mock(Model.class));
+        String viewName = controller.processFindForm(owner, result, model);
 
         // then
         assertThat(stringArgumentCaptor.getValue()).isEqualToIgnoringCase("%FindMe%");
         assertThat(viewName).isEqualToIgnoringCase("owners/ownersList");
+            // inorder asserts
+        inOrder.verify(service).findAllByLastNameLike(anyString());
+        inOrder.verify(model).addAttribute(anyString(), anyList());
     }
 
     @Test
