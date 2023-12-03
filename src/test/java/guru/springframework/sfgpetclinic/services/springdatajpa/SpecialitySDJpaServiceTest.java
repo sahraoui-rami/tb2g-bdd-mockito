@@ -11,13 +11,14 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.BDDMockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class SpecialitySDJpaServiceTest {
 
-    @Mock
+    @Mock(lenient = true)
     SpecialtyRepository specialtyRepository;
 
     @InjectMocks
@@ -137,5 +138,47 @@ class SpecialitySDJpaServiceTest {
         // when & then
         assertThrows(RuntimeException.class, () -> service.delete(new Speciality()));
         then(specialtyRepository).should().delete(any(Speciality.class));
+    }
+
+    @Test
+    void testSaveLambda() {
+        // given
+        final String MATCH_ME = "MATCH ME";
+        Speciality speciality = new Speciality();
+        speciality.setDescription(MATCH_ME);
+
+        Speciality savedSpeciality = new Speciality();
+        savedSpeciality.setId(1L);
+
+            // need mock to only return on match MATCH_ME string
+        given(specialtyRepository.save(argThat(argument -> argument.getDescription().equals(MATCH_ME))))
+                .willReturn(savedSpeciality);
+
+        // when
+        Speciality returnedSpeciality = service.save(speciality);
+
+        // then
+        assertThat(returnedSpeciality).isNotNull();
+        assertThat(returnedSpeciality.getId()).isEqualTo(1L);
+    }
+    @Test
+    void testSaveLambdaNoMatch() {
+        // given
+        final String MATCH_ME = "MATCH ME";
+        Speciality speciality = new Speciality();
+        speciality.setDescription("NO MATCH");
+
+        Speciality savedSpeciality = new Speciality();
+        savedSpeciality.setId(1L);
+
+            // need mock to only return on match MATCH_ME string
+        given(specialtyRepository.save(argThat(argument -> argument.getDescription().equals(MATCH_ME))))
+                .willReturn(savedSpeciality);
+
+        // when
+        Speciality returnedSpeciality = service.save(speciality);
+
+        // then
+        assertNull(returnedSpeciality);
     }
 }
